@@ -2,6 +2,35 @@ name: Build VSIX for testing
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feature/**
+    paths:
+      - "client/**"
+      - "server/**"
+      - "l10n/**"
+      - "themes/**"
+      - "syntaxes/**"
+      - "snippets/**"
+      - "icons/**"
+      - "package.json"
+      - "package-lock.json"
+      - "webpack.config.js"
+      - ".github/workflows/build-vsix.yml"
+  pull_request:
+    paths:
+      - "client/**"
+      - "server/**"
+      - "l10n/**"
+      - "themes/**"
+      - "syntaxes/**"
+      - "snippets/**"
+      - "icons/**"
+      - "package.json"
+      - "package-lock.json"
+      - "webpack.config.js"
+      - ".github/workflows/build-vsix.yml"
 
 jobs:
   package:
@@ -17,5 +46,6 @@ jobs:
       - run: npx @vscode/vsce package
       - uses: actions/upload-artifact@v7
         with:
+          name: vsix-${{ github.ref_name }}-${{ github.sha }}
           path: ./*.vsix
           retention-days: 5
