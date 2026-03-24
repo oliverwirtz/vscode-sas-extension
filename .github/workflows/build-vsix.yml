@@ -43,9 +43,72 @@ jobs:
           node-version-file: ".nvmrc"
           cache: "npm"
       - run: npm ci --no-audit --no-fund
+      - name: Set test build version
+        id: versioning
+        run: |
+          node <<'EOF'
+          const fs = require("fs");
+
+          const pkgPath = "package.json";
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+          const baseVersion = pkg.version.split("-")[0];
+          const [major, minor, patch] = baseVersion.split(".").map(Number);
+
+          const eventName = process.env.GITHUB_EVENT_NAME;
+          const refName = process.env.GITHUB_REF_NAME || "";
+          const branchOrHead =
+            process.env.GITHUB_HEAD_REF || process.env.GITHUB_REF_NAME || "build";
+          const branchSlug = branchOrHead
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ".")
+            .replace(/^\.+|\.+$/g, "")
+            .slice(0, 24) || "build";
+
+          const nextVersion =
+            eventName === "push" && refName === "main"
+              ? `${major}.${minor}.${patch + 1}`
+              : `${baseVersion}-${branchSlug}.${process.env.GITHUB_RUN_NUMBER}`;
+
+          pkg.version = nextVersion;
+          fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${nextVersion}\n`);
+
+          console.log(`Using extension version: ${nextVersion}`);
+          EOF
       - run: npx @vscode/vsce package
+      - name: Rename VSIX and write build metadata
+        id: artifact_meta
+        run: |
+          set -euo pipefail
+
+          version="${{ steps.versioning.outputs.version }}"
+          short_sha="${GITHUB_SHA:0:8}"
+          original_vsix="$(ls ./*.vsix | head -n 1)"
+          renamed_vsix="sas-lsp-${version}-${short_sha}.vsix"
+
+          mv "$original_vsix" "$renamed_vsix"
+
+          cat > vsix-build-info.json <<EOF
+          {
+            "extensionName": "sas-lsp",
+            "extensionVersion": "${version}",
+            "artifactFile": "${renamed_vsix}",
+            "commit": "${GITHUB_SHA}",
+            "ref": "${GITHUB_REF}",
+            "refName": "${GITHUB_REF_NAME}",
+            "event": "${GITHUB_EVENT_NAME}",
+            "runId": "${GITHUB_RUN_ID}",
+            "runNumber": "${GITHUB_RUN_NUMBER}",
+            "runAttempt": "${GITHUB_RUN_ATTEMPT}",
+            "runUrl": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          }
+          EOF
+
+          echo "vsix_file=${renamed_vsix}" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v7
         with:
-          name: vsix-${{ github.ref_name }}-${{ github.sha }}
-          path: ./*.vsix
+          name: vsix-${{ steps.versioning.outputs.version }}-${{ github.sha }}
+          path: |
+            ${{ steps.artifact_meta.outputs.vsix_file }}
+            vsix-build-info.json
           retention-days: 5
