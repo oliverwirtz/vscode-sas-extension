@@ -357,4 +357,74 @@ describe("LibraryDataProvider", async function () {
 
     deleteTableStub.restore();
   });
+
+  it("fetchDistinctColumnValues - returns unique values for a column", async () => {
+    const api = dataAccessApi();
+    const getRowsStub = sinon.stub(api, "getRows").resolves({
+      data: {
+        items: [
+          { cells: ["SUV"] },
+          { cells: ["Sedan"] },
+          { cells: ["SUV"] },
+          { cells: [null] },
+        ],
+        count: 4,
+      },
+    } as AxiosResponse);
+
+    const provider = libraryDataProvider(api);
+    const values = await provider.fetchDistinctColumnValues(
+      {
+        uid: "cars",
+        id: "cars",
+        name: "cars",
+        library: "sashelp",
+        type: "table",
+        readOnly: true,
+      },
+      "type",
+      undefined,
+      100,
+    );
+
+    expect(values).to.deep.equal(["SUV", "Sedan", null]);
+    expect(getRowsStub.calledOnce).to.equal(true);
+    getRowsStub.restore();
+  });
+
+  it("fetchDistinctColumnValues - composes expression and column filters in where clause", async () => {
+    const api = dataAccessApi();
+    const getRowsStub = sinon.stub(api, "getRows").resolves({
+      data: {
+        items: [{ cells: ["Audi"] }],
+        count: 1,
+      },
+    } as AxiosResponse);
+
+    const provider = libraryDataProvider(api);
+    await provider.fetchDistinctColumnValues(
+      {
+        uid: "cars",
+        id: "cars",
+        name: "cars",
+        library: "sashelp",
+        type: "table",
+        readOnly: true,
+      },
+      "make",
+      {
+        filterValue: "msrp > 0",
+        columnFilters: {
+          type: "type = 'SUV'",
+        },
+      },
+      100,
+    );
+
+    const request = getRowsStub.getCall(0).args[0];
+    expect(request.where).to.equal("(msrp > 0) and (type = 'SUV')");
+    expect(request.includeColumns).to.equal("make");
+    expect(request.includeIndex).to.equal(false);
+    getRowsStub.restore();
+  });
 });
