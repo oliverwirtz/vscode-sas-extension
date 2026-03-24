@@ -23,6 +23,19 @@ const requestOptions = {
   headers: { Accept: "application/vnd.sas.collection+json" },
 };
 
+const buildWhereClause = (query: TableQuery | undefined): string | undefined => {
+  if (!query) {
+    return undefined;
+  }
+
+  const whereParts = [query.filterValue, ...Object.values(query.columnFilters || {})]
+    .map((value) => value?.trim())
+    .filter((value) => !!value)
+    .map((value) => `(${value})`);
+
+  return whereParts.length > 0 ? whereParts.join(" and ") : undefined;
+};
+
 class RestLibraryAdapter implements LibraryAdapter {
   protected dataAccessApi: ReturnType<typeof DataAccessApi>;
   protected sessionId: string;
@@ -69,7 +82,7 @@ class RestLibraryAdapter implements LibraryAdapter {
             start,
             limit,
             formatMissingValues: true,
-            where: query && query.filterValue ? query.filterValue : undefined,
+            where: buildWhereClause(query),
           },
           requestOptions,
         ),
@@ -151,6 +164,50 @@ class RestLibraryAdapter implements LibraryAdapter {
       rows: data.items,
       count: data.count,
     };
+  }
+
+  public async getDistinctColumnValues(
+    item: Pick<LibraryItem, "name" | "library">,
+    columnName: string,
+    query: TableQuery | undefined,
+    maxValues: number = 100,
+  ): Promise<(string | number | null)[]> {
+    const { data: viewData } = await this.retryOnFail(
+      async () =>
+        await this.dataAccessApi.createView(
+          {
+            sessionId: this.sessionId,
+            libref: item.library || "",
+            tableName: item.name,
+            viewRequest: {
+              where: buildWhereClause(query),
+              includeColumns: [columnName],
+              distinct: true,
+            },
+          },
+          requestOptions,
+        ),
+    );
+
+    const { data } = await this.retryOnFail<RowCollection>(
+      async () =>
+        await this.dataAccessApi.getRows(
+          {
+            sessionId: this.sessionId,
+            libref: viewData.libref,
+            tableName: viewData.name,
+            includeIndex: false,
+            start: 0,
+            limit: maxValues,
+            formatMissingValues: true,
+          },
+          requestOptions,
+        ),
+    );
+
+    await this.deleteTable({ library: viewData.libref, name: viewData.name });
+
+    return (data.items || []).map((row) => row.cells?.[0] ?? null);
   }
 
   public async getColumns(

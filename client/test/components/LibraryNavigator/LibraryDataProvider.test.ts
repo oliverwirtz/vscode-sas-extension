@@ -394,12 +394,19 @@ describe("LibraryDataProvider", async function () {
 
   it("fetchDistinctColumnValues - composes expression and column filters in where clause", async () => {
     const api = dataAccessApi();
+    const createViewStub = sinon.stub(api, "createView").resolves({
+      data: {
+        libref: "WORK",
+        name: "TMP_VIEW",
+      },
+    } as AxiosResponse);
     const getRowsStub = sinon.stub(api, "getRows").resolves({
       data: {
         items: [{ cells: ["Audi"] }],
         count: 1,
       },
     } as AxiosResponse);
+    const deleteTableStub = sinon.stub(api, "deleteTable").resolves();
 
     const provider = libraryDataProvider(api);
     await provider.fetchDistinctColumnValues(
@@ -421,10 +428,21 @@ describe("LibraryDataProvider", async function () {
       100,
     );
 
-    const request = getRowsStub.getCall(0).args[0];
-    expect(request.where).to.equal("(msrp > 0) and (type = 'SUV')");
-    expect(request.includeColumns).to.equal("make");
-    expect(request.includeIndex).to.equal(false);
+    const createViewRequest = createViewStub.getCall(0).args[0];
+    expect(createViewRequest.viewRequest.where).to.equal(
+      "(msrp > 0) and (type = 'SUV')",
+    );
+    expect(createViewRequest.viewRequest.includeColumns).to.deep.equal(["make"]);
+    expect(createViewRequest.viewRequest.distinct).to.equal(true);
+
+    const getRowsRequest = getRowsStub.getCall(0).args[0];
+    expect(getRowsRequest.includeIndex).to.equal(false);
+    expect(getRowsRequest.tableName).to.equal("TMP_VIEW");
+    expect(getRowsRequest.libref).to.equal("WORK");
+
+    expect(deleteTableStub.calledOnce).to.equal(true);
+    createViewStub.restore();
     getRowsStub.restore();
+    deleteTableStub.restore();
   });
 });
