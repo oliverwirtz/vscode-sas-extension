@@ -2,7 +2,7 @@
   "name": "sas-lsp",
   "displayName": "SAS",
   "description": "Official SAS Language Extension for VS Code",
-  "version": "1.18.1-pngtest",
+  "version": "1.19.1-ado",
   "categories": [
     "Programming Languages",
     "Data Science",
@@ -128,6 +128,11 @@
         "id": "macro-comment",
         "superType": "comment",
         "description": "SAS Macro Comment"
+      },
+      {
+        "id": "macro-keyword-param",
+        "superType": "parameter",
+        "description": "SAS Macro Keyword Parameter"
       },
       {
         "id": "sec-keyword",
@@ -873,6 +878,21 @@
         "command": "SAS.toggleLineComment",
         "title": "%commands.SAS.toggleLineComment%",
         "category": "SAS"
+      },
+      {
+        "command": "SAS.configureAdoSession",
+        "title": "%commands.SAS.configureAdoSession%",
+        "category": "SAS"
+      },
+      {
+        "command": "SAS.setAdoPat",
+        "title": "%commands.SAS.setAdoPat%",
+        "category": "SAS"
+      },
+      {
+        "command": "SAS.setBliStatus",
+        "title": "%commands.SAS.setBliStatus%",
+        "category": "SAS"
       }
     ],
     "keybindings": [
@@ -1127,6 +1147,11 @@
           "when": "(editorLangId == sas || (editorLangId == python && resourceScheme =~ /^sas(Content|Server).*/)) && !SAS.hideRunMenuItem",
           "command": "SAS.runRegion",
           "group": "navigation@3"
+        },
+        {
+          "when": "editorLangId == sas || resourceScheme =~ /^sas(Content|Server).*/",
+          "command": "SAS.setBliStatus",
+          "group": "navigation@4"
         }
       ],
       "notebook/toolbar": [
@@ -1157,6 +1182,16 @@
         {
           "command": "SAS.authorize",
           "when": "(!SAS.authorized && SAS.connectionType == rest) && !SAS.connection.direct"
+        },
+        {
+          "command": "SAS.configureAdoSession"
+        },
+        {
+          "command": "SAS.setAdoPat"
+        },
+        {
+          "when": "editorLangId == sas || resourceScheme =~ /^sas(Content|Server).*/",
+          "command": "SAS.setBliStatus"
         },
         {
           "when": "false",
@@ -1364,7 +1399,8 @@
         "embeddedLanguages": {
           "source.python": "python",
           "source.lua": "lua",
-          "source.sql": "sql"
+          "source.sql": "sql",
+          "source.r": "r"
         }
       }
     ],
@@ -1498,7 +1534,7 @@
     "locale": "npx @vscode/l10n-dev export -o ./l10n ./client/src && node ./tools/locale.mjs"
   },
   "devDependencies": {
-    "@eslint/compat": "2.0.2",
+    "@eslint/compat": "2.0.3",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.10",
@@ -1521,12 +1557,12 @@
     "path-browserify": "^1.0.1",
     "prettier": "^3.8.1",
     "proxyquire": "^2.1.3",
-    "sinon": "^21.0.1",
+    "sinon": "^21.0.2",
     "ts-loader": "^9.5.4",
     "ts-node": "^10.9.2",
     "ts-sinon": "^2.0.2",
     "typescript": "^5.5.3",
-    "webpack": "^5.105.3",
-    "webpack-cli": "^6.0.1"
+    "webpack": "^5.105.4",
+    "webpack-cli": "^7.0.2"
   }
 }

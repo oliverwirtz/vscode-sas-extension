@@ -21,6 +21,11 @@ import {
 
 import * as path from "path";
 
+import {
+  configureAdoSession,
+  setAdoPat,
+  setBliStatus,
+} from "../commands/adoSetStatus";
 import { checkProfileAndAuthorize } from "../commands/authorize";
 import { closeSession } from "../commands/closeSession";
 import { newSASFile, newSASNotebook } from "../commands/new";
@@ -208,6 +213,9 @@ export function activate(context: ExtensionContext) {
     commands.registerTextEditorCommand("SAS.toggleLineComment", (editor) => {
       toggleLineComment(editor, client);
     }),
+    commands.registerCommand("SAS.configureAdoSession", configureAdoSession),
+    commands.registerCommand("SAS.setAdoPat", setAdoPat),
+    commands.registerCommand("SAS.setBliStatus", setBliStatus),
   );
 
   // Reset first to set "No Active Profiles"

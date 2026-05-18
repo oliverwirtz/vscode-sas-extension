@@ -325,6 +325,11 @@ class RestServerAdapter implements ContentAdapter {
     return await this.getContentOfItemAtPath(path);
   }
 
+  public async getContentOfUriAsBinary(uri: Uri): Promise<Uint8Array> {
+    const content = await this.getContentOfUri(uri);
+    return Buffer.from(content, "binary");
+  }
+
   private async getContentOfItemAtPath(path: string) {
     const response = await this.fileSystemApi.getFileContentFromSystem(
       {
@@ -343,31 +348,6 @@ class RestServerAdapter implements ContentAdapter {
     // AxiosResponse<string,>.
     // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     return response.data as unknown as string;
-  }
-
-  public async getContentOfUriAsBinary(uri: Uri): Promise<Uint8Array> {
-    const path = this.trimComputePrefix(getResourceId(uri));
-    const response = await this.fileSystemApi.getFileContentFromSystem(
-      {
-        sessionId: this.sessionId,
-        filePath: path,
-      },
-      {
-        responseType: "arraybuffer",
-      },
-    );
-
-    this.updateFileMetadata(path, response);
-    const responseData: unknown = response.data;
-
-    // Convert the arraybuffer response to Uint8Array
-    if (responseData instanceof ArrayBuffer) {
-      return new Uint8Array(responseData);
-    }
-    if (responseData instanceof Uint8Array) {
-      return responseData;
-    }
-    return new TextEncoder().encode(String(responseData));
   }
 
   public async getFolderPathForItem(): Promise<string> {
@@ -587,7 +567,7 @@ class RestServerAdapter implements ContentAdapter {
       fileStat: {
         ctime: item.creationTimeStamp,
         mtime: item.modifiedTimeStamp,
-        size: fileProperties.size || 0,
+        size: 0,
         type:
           fileProperties.isDirectory ||
           FOLDER_TYPES.indexOf(typeName) >= 0 ||

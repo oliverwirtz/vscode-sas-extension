@@ -14,6 +14,7 @@ export interface LibraryItem {
   type: LibraryItemType;
   library?: string;
   readOnly: boolean;
+  temporaryLibrary?: boolean;
 }
 
 export interface TableRow {
@@ -28,11 +29,12 @@ export interface TableData {
 
 export interface TableQuery {
   filterValue: string;
-  columnFilters?: Record<string, string>;
 }
 
 export interface LibraryAdapter {
   connect(): Promise<void>;
+  createTempLibraryForPath?(path: string): Promise<string>;
+  deleteLibrary?(library: string): Promise<void>;
   deleteTable(item: LibraryItem): Promise<void>;
   getColumns(
     item: LibraryItem,
@@ -53,12 +55,6 @@ export interface LibraryAdapter {
     sortModel: SortModelItem[],
     query: TableQuery | undefined,
   ): Promise<TableData>;
-  getDistinctColumnValues(
-    item: LibraryItem,
-    columnName: string,
-    query: TableQuery | undefined,
-    maxValues?: number,
-  ): Promise<(string | number | null)[]>;
   getRowsAsCSV(
     item: LibraryItem,
     start: number,

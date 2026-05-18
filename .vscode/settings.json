@@ -5,5 +5,11 @@
   "editor.formatOnSave": true,
   "typescript.tsc.autoDetect": "off",
   "typescript.preferences.quoteStyle": "single",
-  "python.defaultInterpreterPath": "C:\\Users\\gghcj\\Anaconda3\\python.exe"
+  "python.defaultInterpreterPath": "C:\\Users\\gghcj\\Anaconda3\\python.exe",
+  "chat.tools.terminal.autoApprove": {
+    "Test-Path": true,
+    "&": true,
+    "Write-Error": true,
+    "ForEach-Object": true
+  }
 }

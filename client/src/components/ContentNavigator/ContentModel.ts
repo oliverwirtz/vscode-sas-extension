@@ -76,7 +76,7 @@ export class ContentModel {
       if (this.contentAdapter.getContentOfUriAsBinary) {
         return await this.contentAdapter.getContentOfUriAsBinary(uri);
       }
-      // Fallback: convert string to binary (this may lose data for true binary files)
+
       const content = await this.getContentByUri(uri);
       return new TextEncoder().encode(content);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars

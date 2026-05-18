@@ -342,16 +342,7 @@ class RestContentAdapter implements ContentAdapter {
       responseType: "arraybuffer",
     });
 
-    // Convert the arraybuffer response to Uint8Array
-    if (data instanceof ArrayBuffer) {
-      return new Uint8Array(data);
-    }
-    // If it's already a Uint8Array or Buffer, use it directly
-    if (data instanceof Uint8Array) {
-      return data;
-    }
-    // Fallback: treat as string and encode
-    return new TextEncoder().encode(String(data));
+    return new Uint8Array(data);
   }
 
   public async getContentOfItem(item: ContentItem): Promise<string> {

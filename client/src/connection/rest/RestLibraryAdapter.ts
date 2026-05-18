@@ -18,22 +18,13 @@ import {
   TableInfo,
 } from "./api/compute";
 import { getApiConfig } from "./common";
+import {
+  trackTemporaryLibrary,
+  untrackTemporaryLibrary,
+} from "./tempLibraries";
 
 const requestOptions = {
   headers: { Accept: "application/vnd.sas.collection+json" },
-};
-
-const buildWhereClause = (query: TableQuery | undefined): string | undefined => {
-  if (!query) {
-    return undefined;
-  }
-
-  const whereParts = [query.filterValue, ...Object.values(query.columnFilters || {})]
-    .map((value) => value?.trim())
-    .filter((value) => !!value)
-    .map((value) => `(${value})`);
-
-  return whereParts.length > 0 ? whereParts.join(" and ") : undefined;
 };
 
 class RestLibraryAdapter implements LibraryAdapter {
@@ -60,6 +51,71 @@ class RestLibraryAdapter implements LibraryAdapter {
     await this.connect();
   }
 
+  public async createTempLibraryForPath(path: string): Promise<string> {
+    await this.setup();
+
+    const { data } = await this.retryOnFail(
+      async () =>
+        await this.dataAccessApi.getLibraries(
+          {
+            sessionId: this.sessionId,
+            start: 0,
+            limit: 1000,
+          },
+          requestOptions,
+        ),
+    );
+
+    const existingLibrefs = new Set(
+      data.items
+        .map((item) => String(item.id || item.name || "").toUpperCase())
+        .filter(Boolean),
+    );
+
+    let tempLibref: string | undefined;
+    for (let i = 0; i < 1000; i++) {
+      const candidate = `_xtmp${i.toString().padStart(3, "0")}`.toUpperCase();
+      if (!existingLibrefs.has(candidate)) {
+        tempLibref = candidate;
+        break;
+      }
+    }
+
+    if (!tempLibref) {
+      throw new Error("No temporary libname is available.");
+    }
+
+    await this.retryOnFail(
+      async () =>
+        await this.dataAccessApi.createLibrary({
+          sessionId: this.sessionId,
+          libraryRequest: {
+            name: tempLibref,
+            engine: "BASE",
+            path,
+          },
+        }),
+    );
+
+    trackTemporaryLibrary(tempLibref, path);
+    return tempLibref;
+  }
+
+  public async deleteLibrary(library: string): Promise<void> {
+    await this.setup();
+    try {
+      await this.retryOnFail(
+        async () =>
+          await this.dataAccessApi.deleteLibrary({
+            sessionId: this.sessionId,
+            libref: library,
+          }),
+      );
+    } finally {
+      untrackTemporaryLibrary(library);
+    }
+  }
+
   public async getRows(
     item: Pick<LibraryItem, "name" | "library">,
     start: number,
@@ -82,7 +138,7 @@ class RestLibraryAdapter implements LibraryAdapter {
             start,
             limit,
             formatMissingValues: true,
-            where: buildWhereClause(query),
+            where: query && query.filterValue ? query.filterValue : undefined,
           },
           requestOptions,
         ),
@@ -164,50 +220,6 @@ class RestLibraryAdapter implements LibraryAdapter {
       rows: data.items,
       count: data.count,
     };
-  }
-
-  public async getDistinctColumnValues(
-    item: Pick<LibraryItem, "name" | "library">,
-    columnName: string,
-    query: TableQuery | undefined,
-    maxValues: number = 100,
-  ): Promise<(string | number | null)[]> {
-    const { data: viewData } = await this.retryOnFail(
-      async () =>
-        await this.dataAccessApi.createView(
-          {
-            sessionId: this.sessionId,
-            libref: item.library || "",
-            tableName: item.name,
-            viewRequest: {
-              where: buildWhereClause(query),
-              includeColumns: [columnName],
-              distinct: true,
-            },
-          },
-          requestOptions,
-        ),
-    );
-
-    const { data } = await this.retryOnFail<RowCollection>(
-      async () =>
-        await this.dataAccessApi.getRows(
-          {
-            sessionId: this.sessionId,
-            libref: viewData.libref,
-            tableName: viewData.name,
-            includeIndex: false,
-            start: 0,
-            limit: maxValues,
-            formatMissingValues: true,
-          },
-          requestOptions,
-        ),
-    );
-
-    await this.deleteTable({ library: viewData.libref, name: viewData.name });
-
-    return (data.items || []).map((row) => row.cells?.[0] ?? null);
   }
 
   public async getColumns(

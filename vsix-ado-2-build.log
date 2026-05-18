@@ -1,0 +1,115 @@
+Executing prepublish script 'npm run vscode:prepublish'...
+
+> sas-lsp@1.19.1-ado-2 vscode:prepublish
+> npm run lint && npm run compile && npm run compile-browser
+
+
+> sas-lsp@1.19.1-ado-2 lint
+> node node_modules/eslint/bin/eslint.js "./client/src/**/*.ts" "./client/src/**/*.tsx" "./server/src/**/*.ts"
+
+[BABEL] Note: The code generator has deoptimised the styling of C:\Users\gghcj\OneDrive - Bayer\Personal Data\git\vscode-sas-extension\client\src\connection\rest\api\compute.ts as it exceeds the max of 500KB.
+
+> sas-lsp@1.19.1-ado-2 compile
+> node ./tools/build.mjs
+
+[browser] npm warn Unknown cli config "--webviews". This will stop working in the next major version of npm.
+[static] npm warn Unknown cli config "--static". This will stop working in the next major version of npm.
+[node] npm warn Unknown cli config "--client". This will stop working in the next major version of npm.
+[browser] 
+[browser] > sas-lsp@1.19.1-ado-2 compile
+[browser] > node ./tools/build.mjs
+[browser] 
+[static] 
+[static] > sas-lsp@1.19.1-ado-2 compile
+[static] > node ./tools/build.mjs
+[static] 
+[node] 
+[node] > sas-lsp@1.19.1-ado-2 compile
+[node] > node ./tools/build.mjs
+[node] 
+[static] Copying files
+[browser] npm run compile --webviews exited with code 0
+[node] npm run compile --client exited with code 0
+[static] Files copied
+[static] npm run compile --static exited with code 0
+
+> sas-lsp@1.19.1-ado-2 compile-browser
+> webpack --mode production
+
+asset [1m[33mextension.js[39m[22m [1m[33m328 KiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: extension) 1 related asset
+runtime modules 670 bytes 3 modules
+modules by path [1m./node_modules/[39m[22m 846 KiB
+  modules by path [1m./node_modules/vscode-languageclient/[39m[22m 452 KiB 55 modules
+  modules by path [1m./node_modules/vscode-languageserver-protocol/[39m[22m 114 KiB
+    modules by path [1m./node_modules/vscode-languageserver-protocol/lib/common/*.js[39m[22m 111 KiB 25 modules
+    + 3 modules
+  modules by path [1m./node_modules/vscode-jsonrpc/[39m[22m 124 KiB 17 modules
+  modules by path [1m./node_modules/minimatch/dist/commonjs/*.js[39m[22m 69.9 KiB
+    [1m./node_modules/minimatch/dist/commonjs/index.js[39m[22m 39.6 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+    + 5 modules
+  [1m./node_modules/vscode-languageserver-types/lib/esm/main.js[39m[22m 79.6 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./node_modules/brace-expansion/index.js[39m[22m 4.88 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./node_modules/balanced-match/index.js[39m[22m 1.19 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+[1m./src/browser/extension.ts[39m[22m 1.35 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+[1mexternal "vscode"[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.105.3 compiled [1m[32msuccessfully[39m[22m in 32746 ms
+
+asset [1m[33mserver.js[39m[22m [1m[33m22.4 MiB[39m[22m [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m [1m[33m[big][39m[22m (name: server) 2 related assets
+orphan modules 63.1 KiB [1m[33m[orphan][39m[22m 5 modules
+runtime modules 891 bytes 4 modules
+optional modules 16.7 MiB [1m[33m[optional][39m[22m 530 modules
+javascript modules 8.21 MiB
+  modules by path [1m./node_modules/[39m[22m 5.17 MiB 244 modules
+  modules by path [1m./src/[39m[22m 2.8 MiB 20 modules
+  modules by path [1m../node_modules/[39m[22m 232 KiB 6 modules
+  + 7 modules
+modules by path [1m./node_modules/pyright-internal-browser/dist/packages/pyright-internal/src/local...(truncated)[39m[22m 989 KiB
+  [1m./node_modules/pyright-internal-browser/dist/packages/pyright-internal/src/local...(truncated)[39m[22m 65.1 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./node_modules/pyright-internal-browser/dist/packages/pyright-internal/src/local...(truncated)[39m[22m 75 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./node_modules/pyright-internal-browser/dist/packages/pyright-internal/src/local...(truncated)[39m[22m 65.1 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  + 12 modules
+[1m./node_modules/pyright-internal-browser/dist/packages/pyright-interna...(truncated)[39m[22m 1.64 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+[1m./messagebundle.properties[39m[22m 2.39 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.105.3 compiled [1m[32msuccessfully[39m[22m in 62272 ms
+ WARNING  This extension consists of 5318 files, out of which 13 are JavaScript files. For performance reasons, you should bundle your extension: https://aka.ms/vscode-bundle-extension. You should also exclude unnecessary files by adding them to your .vscodeignore: https://aka.ms/vscode-vscodeignore.
+
+ INFO  Files included in the VSIX:
+sas-lsp-1.19.1-ado-2.vsix
+├─ [Content_Types].xml 
+├─ extension.vsixmanifest 
+└─ extension/
+   ├─ LICENSE.txt [11.29 KB]
+   ├─ SUPPORT.md [1.12 KB]
+   ├─ changelog.md [29.58 KB]
+   ├─ language-configuration.json [1.03 KB]
+   ├─ package.json [51.77 KB]
+   ├─ package.nls.de.json [7.41 KB]
+   ├─ package.nls.es.json [7.49 KB]
+   ├─ package.nls.fr.json [7.67 KB]
+   ├─ package.nls.it.json [7.44 KB]
+   ├─ package.nls.ja.json [8.05 KB]
+   ├─ package.nls.json [7.18 KB]
+   ├─ package.nls.ko.json [7.31 KB]
+   ├─ package.nls.pl.json [7.3 KB]
+   ├─ package.nls.pt-br.json [7.41 KB]
+   ├─ package.nls.zh-cn.json [6.8 KB]
+   ├─ package.nls.zh-tw.json [6.86 KB]
+   ├─ readme.md [3.06 KB]
+   ├─ terminal_probe.txt 
+   ├─ vsix-ado-2-build.log [4.87 KB]
+   ├─ vsix-build-2.log [13.32 KB]
+   ├─ vsix-build.log [13.32 KB]
+   ├─ client/ (18 files) [4.74 MB]
+   ├─ doc/ (5 files) [10.86 KB]
+   ├─ icons/ (73 files) [67.72 KB]
+   ├─ l10n/ (10 files) [140.54 KB]
+   ├─ sasjs/ (9 files) [31.81 KB]
+   ├─ sasjsresults/ (2 files) [0.29 KB]
+   ├─ server/ (5167 files) [52.4 MB]
+   ├─ snippets/ (1 file) [0.84 KB]
+   ├─ syntaxes/ (2 files) [34.43 KB]
+   └─ themes/ (8 files) [40.98 KB]
+
+=> Run vsce ls --tree to see all included files.
+
+ DONE  Packaged: sas-lsp-1.19.1-ado-2.vsix (5318 files, 13.96 MB)

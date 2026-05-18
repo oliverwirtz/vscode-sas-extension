@@ -1,0 +1,3 @@
+[BABEL] Note: The code generator has deoptimised the styling of C:\Users\gghcj\OneDrive - Bayer\Personal Data\git\vscode-sas-extension\client\src\connection\rest\api\compute.ts as it exceeds the max of 500KB.
+ WARNING  This extension consists of 5320 files, out of which 13 are JavaScript files. For performance reasons, you should bundle your extension: https://aka.ms/vscode-bundle-extension. You should also exclude unnecessary files by adding them to your .vscodeignore: https://aka.ms/vscode-vscodeignore.
+
