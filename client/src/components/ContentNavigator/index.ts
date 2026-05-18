@@ -16,13 +16,13 @@ import {
 } from "vscode";
 
 import { profileConfig } from "../../commands/profile";
+import { getTemporaryLibraryAtPath } from "../../connection/rest/tempLibraries";
 import { getGlobalStorageUri } from "../ExtensionContext";
-import { SubscriptionProvider } from "../SubscriptionProvider";
-import { ConnectionType, ProfileWithFileRootOptions } from "../profile";
 import LibraryAdapterFactory from "../LibraryNavigator/LibraryAdapterFactory";
 import LibraryModel from "../LibraryNavigator/LibraryModel";
-import { getTemporaryLibraryAtPath } from "../../connection/rest/tempLibraries";
 import { LibraryAdapter, LibraryItem } from "../LibraryNavigator/types";
+import { SubscriptionProvider } from "../SubscriptionProvider";
+import { ConnectionType, ProfileWithFileRootOptions } from "../profile";
 import { treeViewSelections } from "../utils/treeViewSelections";
 import ContentAdapterFactory from "./ContentAdapterFactory";
 import ContentDataProvider from "./ContentDataProvider";
@@ -116,12 +116,15 @@ class ContentNavigator implements SubscriptionProvider {
     const SAS = `SAS.${this.sourceType === ContentSourceType.SASContent ? "content" : "server"}`;
     return [
       ...this.contentDataProvider.getSubscriptions(),
-      commands.registerCommand(`${SAS}.openResource`, async (resource: ContentItem) => {
-        if (!resource) {
-          return;
-        }
-        await this.openResource(resource);
-      }),
+      commands.registerCommand(
+        `${SAS}.openResource`,
+        async (resource: ContentItem) => {
+          if (!resource) {
+            return;
+          }
+          await this.openResource(resource);
+        },
+      ),
       commands.registerCommand(
         `${SAS}.deleteResource`,
         async (item: ContentItem) => {
@@ -484,9 +487,14 @@ class ContentNavigator implements SubscriptionProvider {
       }
 
       const safeName = item.name?.replace(/[\\/:*?"<>|]/g, "_") || "image.png";
-      const localUri = Uri.joinPath(globalStorageUri, `${Date.now()}-${safeName}`);
+      const localUri = Uri.joinPath(
+        globalStorageUri,
+        `${Date.now()}-${safeName}`,
+      );
 
-      const bytes = await this.contentModel.getContentByUriAsBinary(item.vscUri);
+      const bytes = await this.contentModel.getContentByUriAsBinary(
+        item.vscUri,
+      );
       await workspace.fs.writeFile(localUri, bytes);
       await commands.executeCommand(
         "vscode.openWith",
@@ -528,14 +536,17 @@ class ContentNavigator implements SubscriptionProvider {
 
     const path = await this.contentDataProvider.getPathOfItem(item);
     const pathParts = path.split("/").filter(Boolean);
-    const parentFolderName = pathParts.length > 1 ? pathParts.at(-2) : undefined;
+    const parentFolderName =
+      pathParts.length > 1 ? pathParts.at(-2) : undefined;
 
     const matchingLibraries = [
       ...libraries.filter(
-        (library) => library.id.toLowerCase() === parentFolderName?.toLowerCase(),
+        (library) =>
+          library.id.toLowerCase() === parentFolderName?.toLowerCase(),
       ),
       ...libraries.filter(
-        (library) => library.id.toLowerCase() !== parentFolderName?.toLowerCase(),
+        (library) =>
+          library.id.toLowerCase() !== parentFolderName?.toLowerCase(),
       ),
     ];
 
@@ -547,7 +558,10 @@ class ContentNavigator implements SubscriptionProvider {
           (table) => table.name.toLowerCase() === tableName.toLowerCase(),
         ),
       );
-      if (matches.length === 1 && library.id.toLowerCase() === parentFolderName?.toLowerCase()) {
+      if (
+        matches.length === 1 &&
+        library.id.toLowerCase() === parentFolderName?.toLowerCase()
+      ) {
         break;
       }
     }
@@ -581,7 +595,10 @@ class ContentNavigator implements SubscriptionProvider {
     libraryAdapter: LibraryAdapter,
     libraryModel: LibraryModel,
   ): Promise<boolean> {
-    if (!libraryAdapter.createTempLibraryForPath || !libraryAdapter.deleteLibrary) {
+    if (
+      !libraryAdapter.createTempLibraryForPath ||
+      !libraryAdapter.deleteLibrary
+    ) {
       return false;
     }
 
@@ -592,48 +609,52 @@ class ContentNavigator implements SubscriptionProvider {
     }
 
     let temporaryLibref: string;
-      // Check if a temporary library already exists at this folder path
-      const existingTempLibref = folderPath ? getTemporaryLibraryAtPath(folderPath) : undefined;
-    
-      if (existingTempLibref) {
-        try {
-          const existingTempLibrary: LibraryItem = {
-            uid: existingTempLibref,
-            id: existingTempLibref,
-            name: existingTempLibref,
-            type: "library",
-            readOnly: false,
+    // Check if a temporary library already exists at this folder path
+    const existingTempLibref = folderPath
+      ? getTemporaryLibraryAtPath(folderPath)
+      : undefined;
+
+    if (existingTempLibref) {
+      try {
+        const existingTempLibrary: LibraryItem = {
+          uid: existingTempLibref,
+          id: existingTempLibref,
+          name: existingTempLibref,
+          type: "library",
+          readOnly: false,
+          temporaryLibrary: true,
+        };
+
+        const existingTables =
+          await libraryModel.getTables(existingTempLibrary);
+        const tableInExisting = existingTables.find(
+          (table) => table.name.toLowerCase() === tableName.toLowerCase(),
+        );
+
+        if (tableInExisting) {
+          // Reuse the existing temp library and table
+          const temporaryTable: LibraryItem = {
+            ...tableInExisting,
             temporaryLibrary: true,
           };
 
-          const existingTables = await libraryModel.getTables(existingTempLibrary);
-          const tableInExisting = existingTables.find(
-            (table) => table.name.toLowerCase() === tableName.toLowerCase(),
+          await commands.executeCommand(
+            "SAS.viewTable",
+            temporaryTable,
+            libraryModel.getTableResultSet(temporaryTable),
+            () => libraryModel.fetchColumns(temporaryTable),
           );
 
-          if (tableInExisting) {
-            // Reuse the existing temp library and table
-            const temporaryTable: LibraryItem = {
-              ...tableInExisting,
-              temporaryLibrary: true,
-            };
-
-            await commands.executeCommand(
-              "SAS.viewTable",
-              temporaryTable,
-              libraryModel.getTableResultSet(temporaryTable),
-              () => libraryModel.fetchColumns(temporaryTable),
-            );
-
-            return true;
-          }
-        } catch {
-          // If reuse fails, fall through to create a new temp library
+          return true;
         }
+      } catch {
+        // If reuse fails, fall through to create a new temp library
       }
+    }
 
-      try {
-      temporaryLibref = await libraryAdapter.createTempLibraryForPath(folderPath);
+    try {
+      temporaryLibref =
+        await libraryAdapter.createTempLibraryForPath(folderPath);
     } catch {
       window.showErrorMessage(
         l10n.t("Unable to assign a temporary library for this dataset."),
@@ -655,7 +676,9 @@ class ContentNavigator implements SubscriptionProvider {
     );
 
     if (!selectedTable) {
-      await libraryAdapter.deleteLibrary(temporaryLibref).catch(() => undefined);
+      await libraryAdapter
+        .deleteLibrary(temporaryLibref)
+        .catch(() => undefined);
       window.showWarningMessage(
         l10n.t(
           "Unable to open this dataset in Data Viewer because no matching table was found in temporary library {library}.",

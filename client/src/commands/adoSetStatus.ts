@@ -1,8 +1,8 @@
 // Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-import * as path from "path";
-
 import { OutputChannel, Uri, l10n, window, workspace } from "vscode";
+
+import * as path from "path";
 
 import { AdoClient, AdoWorkItem } from "../components/AdoClient";
 import { ContentItem } from "../components/ContentNavigator/types";
@@ -212,7 +212,10 @@ function resolveTargetUri(resource?: Uri | ContentItem): Uri | undefined {
   return undefined;
 }
 
-function isSasFileTarget(uri: Uri | undefined, resource?: Uri | ContentItem): boolean {
+function isSasFileTarget(
+  uri: Uri | undefined,
+  resource?: Uri | ContentItem,
+): boolean {
   const extensions = [
     uri?.fsPath,
     uri?.path,
@@ -224,7 +227,9 @@ function isSasFileTarget(uri: Uri | undefined, resource?: Uri | ContentItem): bo
   return extensions.includes(".sas");
 }
 
-export async function setBliStatus(resource?: Uri | ContentItem): Promise<void> {
+export async function setBliStatus(
+  resource?: Uri | ContentItem,
+): Promise<void> {
   const uri = resolveTargetUri(resource);
   if (!uri || !isSasFileTarget(uri, resource)) {
     window.showErrorMessage(l10n.t("Select a SAS file to update BLI status."));
@@ -311,7 +316,11 @@ export async function setBliStatus(resource?: Uri | ContentItem): Promise<void> 
         pathFieldRefName: resolvedPathFieldRefName,
       });
 
-      logCandidates(channel, allScopedItems, "Candidates returned by ADO lookup (no path filter)");
+      logCandidates(
+        channel,
+        allScopedItems,
+        "Candidates returned by ADO lookup (no path filter)",
+      );
       channel.show(true);
 
       const chooseFromCandidates = await window.showWarningMessage(

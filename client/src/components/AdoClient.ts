@@ -73,7 +73,9 @@ export class AdoClient {
     }
   }
 
-  async resolvePathFieldReferenceName(requestedFieldName: string): Promise<string> {
+  async resolvePathFieldReferenceName(
+    requestedFieldName: string,
+  ): Promise<string> {
     const trimmed = requestedFieldName.trim();
     if (!trimmed) {
       throw new Error("Path field name cannot be empty.");
@@ -102,7 +104,9 @@ export class AdoClient {
         return false;
       }
 
-      if (ref.localeCompare(trimmed, undefined, { sensitivity: "accent" }) === 0) {
+      if (
+        ref.localeCompare(trimmed, undefined, { sensitivity: "accent" }) === 0
+      ) {
         return true;
       }
 
@@ -129,17 +133,22 @@ export class AdoClient {
   }
 
   async listWorkItems(request: AdoLookupRequest): Promise<AdoWorkItem[]> {
-    const wiql = this.buildLookupWiql(request.areaPath, request.iterationPath, request.pathFieldRefName, request.filePath);
+    const wiql = this.buildLookupWiql(
+      request.areaPath,
+      request.iterationPath,
+      request.pathFieldRefName,
+      request.filePath,
+    );
     const wiqlResponse =
       (await this.request<WiqlResult>(
-      `/${encodeURIComponent(this.project)}/_apis/wit/wiql?api-version=${this.apiVersion}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+        `/${encodeURIComponent(this.project)}/_apis/wit/wiql?api-version=${this.apiVersion}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: wiql }),
         },
-        body: JSON.stringify({ query: wiql }),
-      },
       )) || {};
 
     const ids = (wiqlResponse.workItems || []).map((item) => item.id);
@@ -162,7 +171,11 @@ export class AdoClient {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ids: chunk,
-              fields: ["System.Title", "System.State", request.pathFieldRefName],
+              fields: [
+                "System.Title",
+                "System.State",
+                request.pathFieldRefName,
+              ],
             }),
           },
         ),
@@ -172,7 +185,10 @@ export class AdoClient {
     const rows = batchResults.flatMap((r) => r?.value || []);
     const withFieldKey = rows.filter((item) => {
       const fields = item.fields || {};
-      return Object.prototype.hasOwnProperty.call(fields, request.pathFieldRefName);
+      return Object.prototype.hasOwnProperty.call(
+        fields,
+        request.pathFieldRefName,
+      );
     }).length;
     const withNonEmptyField = rows.filter((item) => {
       const fields = item.fields || {};
@@ -185,7 +201,9 @@ export class AdoClient {
     );
 
     if (rows.length > 0 && withFieldKey === 0) {
-      const firstFields = Object.keys(rows[0].fields || {}).slice(0, 20).join(", ");
+      const firstFields = Object.keys(rows[0].fields || {})
+        .slice(0, 20)
+        .join(", ");
       this.outputChannel?.appendLine(
         `[ADO] The requested field key was not present in returned rows. Example available fields: ${firstFields}`,
       );
@@ -243,7 +261,9 @@ export class AdoClient {
       this.outputChannel?.appendLine(
         `[ADO] request failed (${response.status}): ${bodyText}`,
       );
-      throw new Error(this.buildRequestFailureMessage(response.status, response.statusText));
+      throw new Error(
+        this.buildRequestFailureMessage(response.status, response.statusText),
+      );
     }
 
     const text = await response.text();
@@ -258,7 +278,10 @@ export class AdoClient {
     return JSON.parse(text);
   }
 
-  private buildRequestFailureMessage(status: number, statusText: string): string {
+  private buildRequestFailureMessage(
+    status: number,
+    statusText: string,
+  ): string {
     const hint =
       status === 401
         ? "PAT is missing, invalid, or expired."
