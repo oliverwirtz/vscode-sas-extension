@@ -192,6 +192,27 @@ export async function setAdoPat(): Promise<void> {
   window.showInformationMessage(l10n.t("Azure DevOps PAT stored securely."));
 }
 
+// For sasServer:/sasContent: URIs the real server file path is embedded in the
+// ?id= query param as a compute API path: /compute/sessions/{id}/files/~fs~dir~fs~file
+// uri.path only contains the filename — decode the full path from the id param instead.
+function resolveServerFilePath(uri: Uri): string {
+  if (
+    uri.scheme === "sasServer" ||
+    uri.scheme === "sasServerReadOnly" ||
+    uri.scheme === "sasContent" ||
+    uri.scheme === "sasContentReadOnly"
+  ) {
+    const resourceId = uri.query.substring(3); // strip leading "id="
+    const filesMarker = "/files/";
+    const idx = resourceId.lastIndexOf(filesMarker);
+    if (idx !== -1) {
+      const rawPath = resourceId.substring(idx + filesMarker.length);
+      return decodeURIComponent(rawPath.split("~fs~").join("/").replace(/~sc~/g, ";"));
+    }
+  }
+  return uri.path;
+}
+
 function resolveTargetUri(resource?: Uri | ContentItem): Uri | undefined {
   if (!resource) {
     return window.activeTextEditor?.document.uri;
@@ -255,9 +276,12 @@ export async function setBliStatus(
     return;
   }
 
-  const filePath = uri.path;
+  const filePath = resolveServerFilePath(uri);
 
   const channel = getOutputChannel();
+  channel.appendLine(
+    `[ADO] URI scheme='${uri.scheme}' uri.path='${uri.path}' resolved filePath='${filePath}'`,
+  );
   try {
     const pat = await resolvePat();
     const client = new AdoClient(

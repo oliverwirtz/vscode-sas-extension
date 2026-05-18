@@ -10,6 +10,8 @@
     "Test-Path": true,
     "&": true,
     "Write-Error": true,
-    "ForEach-Object": true
+    "ForEach-Object": true,
+    "Tee-Object": true,
+    "ConvertTo-Json": true
   }
 }

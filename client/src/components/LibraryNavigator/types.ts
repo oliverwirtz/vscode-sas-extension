@@ -29,6 +29,7 @@ export interface TableData {
 
 export interface TableQuery {
   filterValue: string;
+  columnFilters?: Record<string, string>;
 }
 
 export interface LibraryAdapter {
@@ -71,6 +72,12 @@ export interface LibraryAdapter {
     items: LibraryItem[];
     count: number;
   }>;
+  getDistinctColumnValues?(
+    item: LibraryItem,
+    columnName: string,
+    query: TableQuery | undefined,
+    maxValues: number,
+  ): Promise<(string | number | null)[]>;
   getTableInfo?(item: LibraryItem): Promise<TableInfo>;
   setup(): Promise<void>;
 }

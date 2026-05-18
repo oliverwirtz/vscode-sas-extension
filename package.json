@@ -1124,6 +1124,11 @@
           "command": "SAS.server.uploadFolderResource",
           "when": "(viewItem =~ /update/ || viewItem =~ /createChild/) && view == serverdataprovider && !listMultiSelection && workspacePlatform != mac",
           "group": "uploaddownloadgroup@1"
+        },
+        {
+          "command": "SAS.setBliStatus",
+          "when": "viewItem =~ /update/ && view == serverdataprovider",
+          "group": "adogroup@0"
         }
       ],
       "editor/title/run": [
