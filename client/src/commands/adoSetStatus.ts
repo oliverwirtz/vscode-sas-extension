@@ -1,6 +1,6 @@
 // Copyright © 2026, SAS Institute Inc., Cary, NC, USA.  All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-import { OutputChannel, Uri, l10n, window, workspace } from "vscode";
+import { OutputChannel, Uri, authentication, l10n, window, workspace } from "vscode";
 
 import * as path from "path";
 
@@ -38,24 +38,41 @@ function getOutputChannel(): OutputChannel {
   return outputChannel;
 }
 
-async function resolvePat(): Promise<string> {
+async function resolveAuthHeader(): Promise<string> {
+  // Primary: Azure AD / Entra ID OAuth — authenticates as the current user.
+  // Reuses the existing VS Code Microsoft session silently when available.
+  try {
+    const session = await authentication.getSession(
+      "microsoft",
+      // ADO resource scope — grants work-item read/write using the user's identity.
+      ["499b84ac-1321-427f-aa17-267ca6975798/.default"],
+      { createIfNone: true },
+    );
+    if (session) {
+      return `Bearer ${session.accessToken}`;
+    }
+  } catch {
+    // Fall through to PAT fallback.
+  }
+
+  // Fallback: PAT from env var or stored secret (for automation / users without AAD).
   const envVarName = workspace
     .getConfiguration("SAS")
     .get<string>("ado.patEnvVar", "ADO_PAT");
   const envPat = process.env[envVarName || "ADO_PAT"]?.trim();
   if (envPat) {
-    return envPat;
+    return `Basic ${Buffer.from(`:${envPat}`).toString("base64")}`;
   }
 
   const secretStorage = getSecretStorage<string>(ADO_SECRET_NAMESPACE);
   const storedPat = (await secretStorage.get(DEFAULT_PAT_SECRET_KEY))?.trim();
   if (storedPat) {
-    return storedPat;
+    return `Basic ${Buffer.from(`:${storedPat}`).toString("base64")}`;
   }
 
   throw new Error(
     l10n.t(
-      "Azure DevOps PAT not found. Set {name} or run 'SAS: Set Azure DevOps PAT'.",
+      "Azure DevOps authentication failed. Sign in with your Microsoft account or set the {name} environment variable.",
       { name: envVarName || "ADO_PAT" },
     ),
   );
@@ -207,7 +224,9 @@ function resolveServerFilePath(uri: Uri): string {
     const idx = resourceId.lastIndexOf(filesMarker);
     if (idx !== -1) {
       const rawPath = resourceId.substring(idx + filesMarker.length);
-      return decodeURIComponent(rawPath.split("~fs~").join("/").replace(/~sc~/g, ";"));
+      return decodeURIComponent(
+        rawPath.split("~fs~").join("/").replace(/~sc~/g, ";"),
+      );
     }
   }
   return uri.path;
@@ -283,11 +302,11 @@ export async function setBliStatus(
     `[ADO] URI scheme='${uri.scheme}' uri.path='${uri.path}' resolved filePath='${filePath}'`,
   );
   try {
-    const pat = await resolvePat();
+    const authHeader = await resolveAuthHeader();
     const client = new AdoClient(
       sessionConfig.organization,
       sessionConfig.project,
-      pat,
+      authHeader,
       channel,
     );
 

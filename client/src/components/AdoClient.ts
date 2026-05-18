@@ -36,7 +36,7 @@ export class AdoClient {
   constructor(
     private readonly organization: string,
     private readonly project: string,
-    private readonly pat: string,
+    private readonly authHeader: string,
     private readonly outputChannel?: OutputChannel,
     private readonly apiVersion = "7.1",
   ) {}
@@ -244,14 +244,13 @@ export class AdoClient {
     init: RequestInit,
   ): Promise<T | undefined> {
     const url = `https://dev.azure.com/${this.organization}${path}`;
-    const auth = Buffer.from(`:${this.pat}`).toString("base64");
 
     this.outputChannel?.appendLine(`[ADO] ${init.method || "GET"} ${url}`);
 
     const response = await fetch(url, {
       ...init,
       headers: {
-        Authorization: `Basic ${auth}`,
+        Authorization: this.authHeader,
         ...(init.headers || {}),
       },
     });
@@ -284,9 +283,9 @@ export class AdoClient {
   ): string {
     const hint =
       status === 401
-        ? "PAT is missing, invalid, or expired."
+        ? "Authentication failed. Sign in with your Microsoft account or check your PAT."
         : status === 403
-          ? "PAT does not have required permissions for this organization/project."
+          ? "Access denied. Verify you have permission to access this organization/project."
           : status === 404
             ? "Resource not found. Verify organization, project, and field names."
             : "Unexpected Azure DevOps error.";
