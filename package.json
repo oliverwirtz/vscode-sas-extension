@@ -2,7 +2,7 @@
   "name": "sas-lsp",
   "displayName": "SAS",
   "description": "Official SAS Language Extension for VS Code",
-  "version": "1.19.1",
+  "version": "1.19.1-ado",
   "categories": [
     "Programming Languages",
     "Data Science",
@@ -878,6 +878,21 @@
         "command": "SAS.toggleLineComment",
         "title": "%commands.SAS.toggleLineComment%",
         "category": "SAS"
+      },
+      {
+        "command": "SAS.configureAdoSession",
+        "title": "%commands.SAS.configureAdoSession%",
+        "category": "SAS"
+      },
+      {
+        "command": "SAS.setAdoPat",
+        "title": "%commands.SAS.setAdoPat%",
+        "category": "SAS"
+      },
+      {
+        "command": "SAS.setBliStatus",
+        "title": "%commands.SAS.setBliStatus%",
+        "category": "SAS"
       }
     ],
     "keybindings": [
@@ -1109,6 +1124,11 @@
           "command": "SAS.server.uploadFolderResource",
           "when": "(viewItem =~ /update/ || viewItem =~ /createChild/) && view == serverdataprovider && !listMultiSelection && workspacePlatform != mac",
           "group": "uploaddownloadgroup@1"
+        },
+        {
+          "command": "SAS.setBliStatus",
+          "when": "viewItem =~ /update/ && view == serverdataprovider",
+          "group": "adogroup@0"
         }
       ],
       "editor/title/run": [
@@ -1132,6 +1152,11 @@
           "when": "(editorLangId == sas || (editorLangId =~ /^(python|r|sql)$/ && resourceScheme =~ /^sas(Content|Server).*/)) && !SAS.hideRunMenuItem",
           "command": "SAS.runRegion",
           "group": "navigation@3"
+        },
+        {
+          "when": "editorLangId == sas || resourceScheme =~ /^sas(Content|Server).*/",
+          "command": "SAS.setBliStatus",
+          "group": "navigation@4"
         }
       ],
       "notebook/toolbar": [
@@ -1162,6 +1187,16 @@
         {
           "command": "SAS.authorize",
           "when": "(!SAS.authorized && SAS.connectionType == rest) && !SAS.connection.direct"
+        },
+        {
+          "command": "SAS.configureAdoSession"
+        },
+        {
+          "command": "SAS.setAdoPat"
+        },
+        {
+          "when": "editorLangId == sas || resourceScheme =~ /^sas(Content|Server).*/",
+          "command": "SAS.setBliStatus"
         },
         {
           "when": "false",

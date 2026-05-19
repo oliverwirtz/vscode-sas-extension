@@ -201,6 +201,33 @@ describe("ItcLibraryAdapter tests", () => {
     expect(tableData).to.eql(expectedTableData);
   });
 
+  it("loads distinct values for a column", async () => {
+    const item: LibraryItem = {
+      uid: "test",
+      type: "table",
+      id: "test",
+      name: "TEST",
+      library: "SASHELP",
+      readOnly: true,
+    };
+
+    sessionStub.returns(
+      new DatasetMockSession([JSON.stringify(["Audi", "BMW", null])]),
+    );
+
+    const libraryAdapter = new ItcLibraryAdapter();
+    const values = await libraryAdapter.getDistinctColumnValues(
+      item,
+      "MAKE",
+      {
+        filterValue: "msrp > 0",
+      },
+      100,
+    );
+
+    expect(values).to.eql(["Audi", "BMW", null]);
+  });
+
   it("gets table row count", async () => {
     const item: LibraryItem = {
       uid: "test",

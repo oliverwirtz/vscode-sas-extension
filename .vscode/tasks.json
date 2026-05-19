@@ -51,6 +51,13 @@
         "reveal": "never"
       },
       "problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"]
+    },
+    {
+      "label": "package-ado-vsix",
+      "type": "shell",
+      "command": "C:\\Users\\gghcj\\nodejs\\node-v24.14.0-win-x64\\npx.cmd",
+      "args": ["@vscode/vsce", "package", "--out", "sas-lsp-1.19.1-ado.vsix"],
+      "isBackground": false
     }
   ]
 }
