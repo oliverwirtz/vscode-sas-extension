@@ -432,7 +432,9 @@ describe("LibraryDataProvider", async function () {
     expect(createViewRequest.viewRequest.where).to.equal(
       "(msrp > 0) and (type = 'SUV')",
     );
-    expect(createViewRequest.viewRequest.includeColumns).to.deep.equal(["make"]);
+    expect(createViewRequest.viewRequest.includeColumns).to.deep.equal([
+      "make",
+    ]);
     expect(createViewRequest.viewRequest.distinct).to.equal(true);
 
     const getRowsRequest = getRowsStub.getCall(0).args[0];

@@ -145,9 +145,7 @@ class ItcLibraryAdapter implements LibraryAdapter {
     query: TableQuery | undefined,
     maxValues: number = 100,
   ): Promise<(string | number | null)[]> {
-    const queryData = query
-      ? JSON.stringify(query).replace(/'/g, "''")
-      : "";
+    const queryData = query ? JSON.stringify(query).replace(/'/g, "''") : "";
     const code = `
       $runner.GetDistinctColumnValues("${item.library}","${item.name}","${columnName}", '${queryData}', ${maxValues})
     `;

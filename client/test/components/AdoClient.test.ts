@@ -31,7 +31,9 @@ describe("AdoClient", () => {
   it("returns trimmed input when field catalog is empty", async () => {
     requestStub.resolves({ value: [] });
 
-    const resolved = await client.resolvePathFieldReferenceName("  Custom.PathToFile  ");
+    const resolved = await client.resolvePathFieldReferenceName(
+      "  Custom.PathToFile  ",
+    );
 
     expect(resolved).to.equal("Custom.PathToFile");
   });
@@ -97,7 +99,9 @@ describe("AdoClient", () => {
     ]);
 
     const wiqlRequest = requestStub.firstCall.args[1] as RequestInit;
-    const wiqlBody = JSON.parse(wiqlRequest.body as string) as { query: string };
+    const wiqlBody = JSON.parse(wiqlRequest.body as string) as {
+      query: string;
+    };
 
     expect(wiqlBody.query).to.include("UNDER 'Project\\Team''s'");
     expect(wiqlBody.query).to.include("UNDER 'Project\\Sprint 1'");
