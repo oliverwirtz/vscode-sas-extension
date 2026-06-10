@@ -13,7 +13,7 @@ import {
   l10n,
   window,
   workspace,
-} from "vscode";
+} from "vscode"; 
 
 import { profileConfig } from "../../commands/profile";
 import { getTemporaryLibraryAtPath } from "../../connection/rest/tempLibraries";
